@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.crudapplication.basic.entity.StudentEntity;
 import com.crudapplication.basic.repository.StudentRepository;
-import com.crudapplication.myresponse.MyResponse;
 import com.crudapplication.dtos.*;
 
 @RestController
@@ -21,17 +20,17 @@ public class HomeController {
 	
 	
 	@GetMapping("/")
-	public MyResponse homeFun() {
+	public CommonResponse homeFun() {
 		try {
 		System.out.println("home controller running");
 		List<StudentEntity> studentList = studentRepository.findAll();
 		System.out.println(studentList);
-		MyResponse newResponse = new MyResponse(200,"return type from custom response class",studentList);
-		return newResponse;
+		CommonResponse successResponse = new CommonResponse(200,true,"return type from custom response class",studentList);
+		return successResponse;
 		}catch(Exception err) {
 			System.out.println(err);
-			MyResponse newResponse = new MyResponse(500,"Failed",err);
-			return newResponse;
+			CommonResponse errResponse = new CommonResponse(500,false,"Failed",err);
+			return errResponse;
 		}
 		
 	}
@@ -43,7 +42,7 @@ public class HomeController {
 		System.out.println("home controller running");
 		List<StudentEntity> studentList = studentRepository.findAll();
 		System.out.println(studentList);
-		var resBody = new MyResponse(200,"success",studentList); //creating your custom response handler class
+		var resBody = new CommonResponse(200,true,"success",studentList); //creating your custom response handler class
 		return ResponseEntity.status(HttpStatus.OK).body(resBody); //and then passing it through response entity
 		}catch(Exception err) {
 			System.out.println(err);
@@ -62,12 +61,25 @@ public class HomeController {
 	public ResponseEntity<?> getSingleStudent(@PathVariable int rollNo) {
 		try {
 		Optional<StudentEntity> student  = studentRepository.findById(rollNo);
-		StudentEntity student1 = student.get();
-		var resData = new MyResponse(200,"success",student1);
+		StudentEntity studentObj = student.get(); 
+		//using builder
+		System.out.println("student found"+studentObj);
+		var resData = CommonResponse.builder()
+				.statusCode(200)
+				.success(true)
+				.message("student fetched successfully")
+				.resData(studentObj)
+				.build();
 		return ResponseEntity.status(HttpStatus.OK).body(resData);
 		}catch(Exception err) {
 			System.out.println(err);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(err);
+			var resData = CommonResponse.builder()
+					.statusCode(500)
+					.success(false)
+					.message(err.getMessage())
+					.resData(null)
+					.build();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resData);
 		}
 	}
 	
@@ -88,6 +100,7 @@ public class HomeController {
 	@DeleteMapping("/deleteStudent/{rollNo}")
 	public ResponseEntity<?>  deleteStudent(@PathVariable int rollNo) {
 		try {
+			System.out.println("roll no got=>"+rollNo);
 		String message = "";
 		StudentEntity student = studentRepository.findById(rollNo).get();
 		System.out.println(student);
