@@ -121,8 +121,13 @@ public class HomeController {
 	}
 	
 	@PutMapping("/updateStudent")
-	public ResponseEntity<?> updateStudent(@RequestBody StudentEntity student) {
+	public ResponseEntity<?> updateStudent(@RequestBody StudentEntity studentReq) {
 		try {
+			StudentEntity student  = studentRepository.findById(studentReq.getRollNo()).get();
+			System.out.println(student);
+			student.setName(studentReq.getName());
+			student.setEmail(studentReq.getEmail());
+			student.setAddress(studentReq.getAddress());
 			studentRepository.save(student);
 			var responseObj = new CommonResponse(200,true,"student data fetched",student);
 			return ResponseEntity.status(HttpStatus.OK).body(responseObj);
